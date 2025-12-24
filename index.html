@@ -143,6 +143,36 @@
       background:rgba(39,230,154,.06);
       color:#ccffe9; font-size:12px;
     }
+  
+    .globalToast{
+      position:fixed; left:12px; right:12px; bottom:12px; z-index:9999;
+      padding:12px 14px; border-radius:14px; border:1px solid var(--line);
+      background:rgba(11,18,32,.95); color:#cfe0ff; font-size:13px;
+      display:none;
+      backdrop-filter: blur(8px);
+    }
+    .globalToast.show{ display:block; }
+    .modalError{
+      margin-top:10px; padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(255,107,107,.35);
+      background:rgba(255,107,107,.08);
+      color:#ffd2d2; font-size:12px; display:none;
+    }
+    .modalError.show{ display:block; }
+
+  
+    body[data-theme="light"]{
+      --bg:#f5f7fb; --panel:#ffffff; --panel3:#f0f3f9;
+      --text:#0b1220; --muted:#51627f; --line:#d7deea; --good:#0a8f5b; --bad:#c23a3a;
+      --accent1:#00b879; --accent2:#2a67ff;
+      background:linear-gradient(180deg,#ffffff,#f5f7fb 30%);
+    }
+    body[data-theme="light"] .toast, 
+    body[data-theme="light"] .globalToast{
+      background:rgba(240,243,249,.98);
+      color:#0b1220;
+    }
+
   </style>
 </head>
 <body>
@@ -167,9 +197,17 @@
 
     <div class="pillRow">
       <div class="pill"><span class="badge"><span id="liveDot" class="dot off"></span><span id="liveText">Not updating</span></span><span></span></div>
+
+      <div class="pill"><span>API</span><b id="apiStatus">DEMO</b></div>
+      <div class="pill"><span>Mode</span><b id="modeStatus">DEMO</b></div>
+
       <div class="pill"><span>Cash</span><b id="cashTop">£0.00</b></div>
       <div class="pill"><span>Equity</span><b id="equityTop">£0.00</b></div>
       <div class="pill"><span>As of</span><span id="asOf" class="muted">—</span></div>
+
+      <div class="pill"><span>Session P/L</span><b id="sessionPL">£0.00</b></div>
+      <div class="pill"><span>Session Start</span><span id="sessionStart" class="muted">—</span></div>
+
     </div>
 
     <div class="card" style="margin-top:12px; padding:12px; background:var(--panel3);">
@@ -187,10 +225,32 @@
           <option value="10000">10 seconds</option>
         </select>
       </div>
+
+      <div class="field" style="margin-top:10px;">
+        <label class="muted">Demo Mode (no API key needed)</label>
+        <select id="demoMode">
+          <option value="on">ON (simulated prices)</option>
+          <option value="off">OFF (requires API)</option>
+        </select>
+      </div>
+      <div class="small" style="margin-top:8px; color:#93a9ce;">
+        Demo mode is great for testing on iPhone. Turn it OFF once your API key works.
+      </div>
+
+      <div class="field" style="margin-top:10px;">
+        <label class="muted">Theme</label>
+        <select id="themeMode">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+
+
       <div class="row" style="margin-top:10px;">
         <button class="btn" style="flex:1;" id="startBtn">Start</button>
         <button class="btn ghost" style="flex:1;" id="stopBtn">Stop</button>
       </div>
+      <button class="btn ghost" style="width:100%; margin-top:10px;" id="testBtn">Test API / Refresh Now</button>
 
       <div class="warn">
         Holdings revalue at real market prices whenever the app refreshes.
@@ -236,6 +296,19 @@
               <div class="assetChange" id="assetChange">—</div>
             </div>
             <div class="muted small">Trade by £ amount. The app converts it into shares at the current price.</div>
+
+            <div class="row" style="gap:8px; flex-wrap:wrap;">
+              <span class="small" id="marketStatus">—</span>
+              <span class="small" id="currencyNote">—</span>
+            </div>
+
+            <div class="row" style="gap:8px; margin-top:6px;">
+              <button class="btn ghost" style="padding:6px 10px;" id="tf_1m">1m</button>
+              <button class="btn ghost" style="padding:6px 10px;" id="tf_5m">5m</button>
+              <button class="btn ghost" style="padding:6px 10px;" id="tf_1h">1h</button>
+              <button class="btn ghost" style="padding:6px 10px;" id="tf_1d">1D</button>
+            </div>
+
           </div>
           <div class="sparkWrap" style="width:min(520px, 100%);">
             <canvas id="spark" width="520" height="100"></canvas>
@@ -314,6 +387,24 @@
         <div id="viewPortfolio" style="display:none;">
           <h2>Portfolio</h2>
           <div class="muted">Holdings adjust to real prices on each refresh.</div>
+
+          <div class="card" style="margin-top:10px; padding:12px; background:var(--panel3);">
+            <div class="row" style="justify-content:space-between; gap:10px;">
+              <div>
+                <div class="muted small">Total Return</div>
+                <div style="font-weight:1100; font-size:16px;" id="perfReturn">—</div>
+              </div>
+              <div>
+                <div class="muted small">Unrealized P/L</div>
+                <div style="font-weight:1100; font-size:16px;" id="perfUPL">—</div>
+              </div>
+              <div>
+                <div class="muted small">Best / Worst</div>
+                <div style="font-weight:1100; font-size:13px;" id="perfBestWorst">—</div>
+              </div>
+            </div>
+          </div>
+
           <div style="margin-top:10px; overflow:auto;">
             <table>
               <thead>
@@ -362,6 +453,22 @@
         <div class="small" style="margin-top:10px;">
           Want background updates while the app is closed? That needs a tiny server + push/email alerts.
         </div>
+
+        <div class="card" style="margin-top:12px; padding:12px; background:var(--panel3);">
+          <h3>Price Alerts (local)</h3>
+          <div class="muted small">Alerts trigger while the app is open.</div>
+          <div class="row" style="margin-top:10px;">
+            <input id="alertSym" placeholder="AAPL" style="flex:1; min-width:120px; border-radius:12px; border:1px solid var(--line); background:var(--panel3); color:var(--text); padding:10px 12px; outline:none;">
+            <select id="alertDir" style="min-width:92px; border-radius:12px; border:1px solid var(--line); background:var(--panel3); color:var(--text); padding:10px 12px; outline:none;">
+              <option value=">">></option>
+              <option value="<"><</option>
+            </select>
+            <input id="alertPx" placeholder="200" inputmode="decimal" style="width:110px; border-radius:12px; border:1px solid var(--line); background:var(--panel3); color:var(--text); padding:10px 12px; outline:none;">
+          </div>
+          <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="addAlert()">Add Alert</button>
+          <div id="alertList" style="margin-top:10px;"></div>
+        </div>
+
       </aside>
     </div>
   </main>
@@ -416,6 +523,8 @@
       <button class="btn ghost" style="flex:1;" onclick="closeTicket()">Cancel</button>
     </div>
 
+    <div id="modalError" class="modalError"></div>
+
     <div class="warn">
       SELL: if £ amount is larger than your holding’s value, it sells the maximum possible.
     </div>
@@ -432,7 +541,16 @@
     active: "papertrading_active_symbol",
     series: "papertrading_series",
     names: "papertrading_names",
-    discState: "papertrading_disc_state"
+    discState: "papertrading_disc_state",
+    demo: "papertrading_demo_mode",
+    demoPrices: "papertrading_demo_prices",
+    startCash: "papertrading_start_cash",
+    theme: "papertrading_theme",
+    sessionStartEq: "papertrading_session_start_equity",
+    sessionStartTs: "papertrading_session_start_ts",
+    alerts: "papertrading_alerts",
+    posOpened: "papertrading_pos_opened",
+    timeframe: "papertrading_timeframe"
   };
   const DEFAULT_CASH = 100000;
 
@@ -440,6 +558,233 @@
   let lastPrices = {};
   let usdToGbpCache = null;
   let usdToGbpTs = 0;
+
+  let lastNativeUSD = {}; // symbol -> native USD (or quote mid) before GBP conversion
+
+  function getStartCash(){
+    const v = localStorage.getItem(KEY.startCash);
+    if(v===null){
+      localStorage.setItem(KEY.startCash, String(DEFAULT_CASH));
+      return DEFAULT_CASH;
+    }
+    return Number(v);
+  }
+  function setStartCash(v){ localStorage.setItem(KEY.startCash, String(v)); }
+
+  function getDemoMode(){
+    const v = localStorage.getItem(KEY.demo);
+    if(v===null){
+      localStorage.setItem(KEY.demo, "on");
+      return "on";
+    }
+    return v;
+  }
+  function setDemoMode(v){
+    localStorage.setItem(KEY.demo, v);
+    const sel = document.getElementById("demoMode");
+    if(sel) sel.value = v;
+    updateStatusPills();
+  }
+
+  function getDemoPrices(){
+    const raw = localStorage.getItem(KEY.demoPrices);
+    return raw ? JSON.parse(raw) : {};
+  }
+  function setDemoPrices(p){
+    localStorage.setItem(KEY.demoPrices, JSON.stringify(p));
+  }
+
+  function hashSeed(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h>>>0);
+  }
+
+  function ensureDemoSeed(symbols){
+    const p = getDemoPrices();
+    let changed = false;
+    for(const s of symbols){
+      if(p[s] == null){
+        const seed = hashSeed(s);
+        // base between 10 and 400 for stocks, higher for BTC, gold etc
+        let base = 10 + (seed % 390);
+        if(s.includes("BTC")) base = 25000 + (seed % 30000);
+        if(s.includes("XAU")) base = 1500 + (seed % 1500);
+        // store as GBP price directly for demo
+        p[s] = base;
+        changed = true;
+      }
+    }
+    if(changed) setDemoPrices(p);
+    return p;
+  }
+
+  function stepDemoPrices(symbols){
+    const p = ensureDemoSeed(symbols);
+    for(const s of symbols){
+      const x = p[s];
+      // random walk ±0.35% per tick (scaled)
+      const rnd = (Math.random() - 0.5) * 0.007;
+      p[s] = Math.max(0.0001, x * (1 + rnd));
+    }
+    setDemoPrices(p);
+    return p;
+  }
+
+  function updateStatusPills(){
+    const apiKey = (document.getElementById("apiKey")?.value || "").trim();
+    const demo = getDemoMode();
+    const apiEl = document.getElementById("apiStatus");
+    const modeEl = document.getElementById("modeStatus");
+    if(apiEl){
+      apiEl.textContent = apiKey ? "KEY SET" : (demo==="on" ? "DEMO" : "NO KEY");
+    }
+    if(modeEl){
+      modeEl.textContent = demo==="on" ? "DEMO" : "LIVE";
+    }
+  }
+
+  
+  function getTheme(){
+    const v = localStorage.getItem(KEY.theme);
+    if(!v){ localStorage.setItem(KEY.theme, "dark"); return "dark"; }
+    return v;
+  }
+  function setTheme(v){
+    localStorage.setItem(KEY.theme, v);
+    document.body.setAttribute("data-theme", v);
+    const sel = document.getElementById("themeMode");
+    if(sel) sel.value = v;
+  }
+
+  function getAlerts(){
+    const raw = localStorage.getItem(KEY.alerts);
+    return raw ? JSON.parse(raw) : [];
+  }
+  function setAlerts(a){ localStorage.setItem(KEY.alerts, JSON.stringify(a)); }
+
+  function renderAlerts(){
+    const box = document.getElementById("alertList");
+    if(!box) return;
+    const a = getAlerts();
+    if(a.length===0){
+      box.innerHTML = '<div class="muted small">No alerts yet.</div>';
+      return;
+    }
+    box.innerHTML = a.map((it,i)=>`
+      <div class="pill" style="margin-top:8px;">
+        <span>${it.sym} ${it.dir} ${gbp(it.px)}</span>
+        <span style="cursor:pointer;" onclick="removeAlert(${i})">✕</span>
+      </div>
+    `).join("");
+  }
+  function addAlert(){
+    const sym = (document.getElementById("alertSym")?.value || "").trim().toUpperCase();
+    const dir = document.getElementById("alertDir")?.value || ">";
+    const px = Number(document.getElementById("alertPx")?.value);
+    if(!sym || !isFinite(px) || px<=0){ toast("Enter symbol + target price."); return; }
+    const a = getAlerts();
+    a.push({sym, dir, px, fired:false});
+    setAlerts(a);
+    renderAlerts();
+    toast(`Alert added: ${sym} ${dir} ${gbp(px)}`);
+  }
+  function removeAlert(i){
+    const a = getAlerts();
+    a.splice(i,1);
+    setAlerts(a);
+    renderAlerts();
+  }
+  function checkAlerts(){
+    const a = getAlerts();
+    if(a.length===0) return;
+    let changed=false;
+    for(const it of a){
+      if(it.fired) continue;
+      const px = lastPrices[it.sym];
+      if(!px) continue;
+      if(it.dir === ">" && px > it.px){ it.fired=true; changed=true; toast(`🔔 ${it.sym} crossed ABOVE ${gbp(it.px)} (now ${gbp(px)})`); }
+      if(it.dir === "<" && px < it.px){ it.fired=true; changed=true; toast(`🔔 ${it.sym} crossed BELOW ${gbp(it.px)} (now ${gbp(px)})`); }
+    }
+    if(changed) setAlerts(a);
+  }
+
+  function getPosOpened(){
+    const raw = localStorage.getItem(KEY.posOpened);
+    return raw ? JSON.parse(raw) : {};
+  }
+  function setPosOpened(o){ localStorage.setItem(KEY.posOpened, JSON.stringify(o)); }
+
+  function getTimeframe(){
+    const v = localStorage.getItem(KEY.timeframe);
+    if(!v){ localStorage.setItem(KEY.timeframe, "1h"); return "1h"; }
+    return v;
+  }
+  function setTimeframe(tf){
+    localStorage.setItem(KEY.timeframe, tf);
+    syncTimeframeButtons();
+    drawSparkline();
+  }
+  function syncTimeframeButtons(){
+    const tf = getTimeframe();
+    ["1m","5m","1h","1d"].forEach(x=>{
+      const b = document.getElementById("tf_"+x);
+      if(!b) return;
+      if(x===tf) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  }
+
+  function sessionInitIfNeeded(){
+    const ts = localStorage.getItem(KEY.sessionStartTs);
+    if(!ts){
+      localStorage.setItem(KEY.sessionStartTs, String(Date.now()));
+      // equity set after first renderPortfolio; placeholder
+      localStorage.setItem(KEY.sessionStartEq, String(0));
+    }
+  }
+  function setSessionStartEquity(eq){
+    localStorage.setItem(KEY.sessionStartEq, String(eq));
+  }
+  function getSessionStartEquity(){ return Number(localStorage.getItem(KEY.sessionStartEq) || "0"); }
+  function getSessionStartTs(){ return Number(localStorage.getItem(KEY.sessionStartTs) || "0"); }
+
+
+  function marketStatus(sym){
+    if(sym.startsWith("X:")) return "Market: 24/7 (Crypto)";
+    if(sym.startsWith("C:")) return "Market: 24/5 (FX/Metals)";
+    // US equities (NYSE/Nasdaq) using NY timezone
+    try{
+      const parts = new Intl.DateTimeFormat('en-US',{
+        timeZone:'America/New_York',
+        weekday:'short',
+        hour:'2-digit',
+        minute:'2-digit',
+        hour12:false
+      }).formatToParts(new Date());
+      const wd = parts.find(p=>p.type==='weekday')?.value || "";
+      const hh = Number(parts.find(p=>p.type==='hour')?.value || "0");
+      const mm = Number(parts.find(p=>p.type==='minute')?.value || "0");
+      const mins = hh*60 + mm;
+      const open = (wd!=='Sat' && wd!=='Sun' && mins >= (9*60+30) && mins < (16*60));
+      return open ? "Market: OPEN (US)" : "Market: CLOSED (US)";
+    }catch{
+      return "Market: —";
+    }
+  }
+
+  function currencyNote(sym){
+    const gbpPx = lastPrices[sym];
+    const nat = lastNativeUSD[sym];
+    if(sym.startsWith("X:") || sym.startsWith("C:") || !sym.startsWith("C:")){
+      if(nat && gbpPx){
+        return `USD ${nat.toFixed(4)} → GBP ${gbpPx.toFixed(4)}`;
+      }
+    }
+    if(gbpPx) return `GBP ${gbpPx.toFixed(4)}`;
+    return "—";
+  }
+
 
   function getNames(){ const raw = localStorage.getItem(KEY.names); return raw ? JSON.parse(raw) : {}; }
   function setNames(map){ localStorage.setItem(KEY.names, JSON.stringify(map)); }
@@ -502,11 +847,21 @@
   function pct(n){ if(!isFinite(n)) return "—"; const sign = n>=0?"+":""; return sign + (n*100).toFixed(2) + "%"; }
 
   function toast(msg){
-    const t = document.getElementById("toast");
+    const t = document.getElementById("globalToast");
+    if(!t) return;
     t.textContent = msg;
     t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"), 2200);
+    setTimeout(()=>t.classList.remove("show"), 2600);
   }
+  
+  function modalError(msg){
+    const box = document.getElementById("modalError");
+    if(!box) return;
+    if(!msg){ box.textContent=""; box.classList.remove("show"); return; }
+    box.textContent = msg;
+    box.classList.add("show");
+  }
+
   function setLive(on){
     const dot = document.getElementById("liveDot");
     const text = document.getElementById("liveText");
@@ -593,11 +948,53 @@
           <td class="right">${px ? gbp(value) : "—"}</td>
           <td class="right ${upl>=0 ? "pos":"neg"}">${px ? gbp(upl) : "—"}</td>
         `;
+        tr.style.cursor = "pointer";
+        tr.addEventListener("click", ()=>openPositionModal(sym));
         body.appendChild(tr);
       });
     }
 
     const equity = cash + mkt;
+
+    // Session P/L
+    const sessStart = getSessionStartEquity();
+    if(sessStart === 0){ setSessionStartEquity(equity); }
+    const sessPL = equity - getSessionStartEquity();
+    const sessEl = document.getElementById("sessionPL");
+    if(sessEl) sessEl.textContent = gbp(sessPL);
+    const stTs = getSessionStartTs();
+    const stEl = document.getElementById("sessionStart");
+    if(stEl && stTs) stEl.textContent = new Date(stTs).toLocaleTimeString();
+
+    // Performance metrics
+    const startCash = getStartCash();
+    const totalReturn = (equity - startCash);
+    const totalReturnPct = startCash > 0 ? (totalReturn / startCash) : 0;
+    const perfReturn = document.getElementById("perfReturn");
+    const perfUPL = document.getElementById("perfUPL");
+    const perfBestWorst = document.getElementById("perfBestWorst");
+    if(perfReturn) perfReturn.textContent = `${gbp(totalReturn)} (${(totalReturnPct*100).toFixed(2)}%)`;
+    if(perfUPL) perfUPL.textContent = gbp(Object.keys(positions).reduce((acc,s)=>{
+      const sh = positions[s].shares; const avg = positions[s].avg; const px = lastPrices[s]||0;
+      return acc + (px*sh - avg*sh);
+    },0));
+
+    // Best / worst by unrealized P/L
+    let best = null, worst = null;
+    for(const s of Object.keys(positions)){
+      const sh = positions[s].shares; const avg = positions[s].avg; const px = lastPrices[s]||0;
+      const upl = (px*sh - avg*sh);
+      if(best===null || upl > best.upl) best = {s,upl};
+      if(worst===null || upl < worst.upl) worst = {s,upl};
+    }
+    if(perfBestWorst){
+      if(best && worst){
+        perfBestWorst.textContent = `Best: ${best.s} ${gbp(best.upl)} • Worst: ${worst.s} ${gbp(worst.upl)}`;
+      } else {
+        perfBestWorst.textContent = "—";
+      }
+    }
+
     document.getElementById("cashTop").textContent = gbp(cash);
     document.getElementById("equityTop").textContent = gbp(equity);
     document.getElementById("asOf").textContent = new Date().toLocaleTimeString();
@@ -622,7 +1019,9 @@
         <td class="right">${Number(t.shares).toFixed(6)}</td>
         <td class="right">${gbp(t.price_gbp)}</td>
       `;
-      body.appendChild(tr);
+      tr.style.cursor = "pointer";
+        tr.addEventListener("click", ()=>openPositionModal(sym));
+        body.appendChild(tr);
     });
   }
 
@@ -645,7 +1044,14 @@
     const px = lastPrices[sym];
     document.getElementById("assetPrice").textContent = px ? gbp(px) : "£—";
 
-    const series = (getSeries()[sym] || []).slice(-60);
+    let seriesFull = (getSeries()[sym] || []);
+    const tf = getTimeframe();
+    let take = 60;
+    if(tf==="1m") take = 60;
+    if(tf==="5m") take = 120;
+    if(tf==="1h") take = 240;
+    if(tf==="1d") take = 480;
+    const series = seriesFull.slice(-take);
     const el = document.getElementById("assetChange");
     if(series.length >= 2){
       const a = series[series.length-2], b = series[series.length-1];
@@ -656,6 +1062,8 @@
       el.textContent = "—";
       el.className = "assetChange muted";
     }
+    document.getElementById("marketStatus").textContent = marketStatus(sym);
+    document.getElementById("currencyNote").textContent = currencyNote(sym);
     drawSparkline();
     syncTicket();
   }
@@ -666,7 +1074,14 @@
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const series = (getSeries()[sym] || []).slice(-60);
+    let seriesFull = (getSeries()[sym] || []);
+    const tf = getTimeframe();
+    let take = 60;
+    if(tf==="1m") take = 60;
+    if(tf==="5m") take = 120;
+    if(tf==="1h") take = 240;
+    if(tf==="1d") take = 480;
+    const series = seriesFull.slice(-take);
     if(series.length < 2){
       ctx.fillStyle = "#9bb0d0";
       ctx.font = "12px ui-sans-serif";
@@ -775,24 +1190,60 @@
   async function fetchPriceGBP(sym, apiKey){
     if(isCrypto(sym)){
       const native = await cryptoLastTradeUSD(sym, apiKey);
+      lastNativeUSD[sym] = native;
       return native * await usdToGbp(apiKey);
     }
     if(isForex(sym)){
       const native = await forexLastQuoteMidUSD(sym, apiKey);
+      lastNativeUSD[sym] = native;
       return native * await usdToGbp(apiKey);
     }
     const native = await stockLastTradeUSD(sym, apiKey);
+    lastNativeUSD[sym] = native;
     return native * await usdToGbp(apiKey);
   }
 
   async function refreshPrices(){
     const apiKey = document.getElementById("apiKey").value.trim();
-    if(!apiKey){ toast("Paste your API key first."); return; }
-    localStorage.setItem(KEY.api, apiKey);
+    const demo = getDemoMode();
 
     const active = getActiveSymbol();
     const watch = Array.from(new Set([...getWatchlist(), ...Object.keys(getPositions()), active]))
       .map(s=>s.toUpperCase());
+
+    // DEMO path (no key required)
+    if((!apiKey || apiKey.length===0) && demo==="on"){
+      const p = stepDemoPrices(watch);
+      for(const sym of watch){
+        lastPrices[sym] = Number(p[sym]);
+        lastNativeUSD[sym] = null;
+        const seriesAll = getSeries();
+        const arr = seriesAll[sym] || [];
+        arr.push(lastPrices[sym]);
+        seriesAll[sym] = arr.slice(-240);
+        setSeries(seriesAll);
+      }
+      updateStatusPills();
+      renderAll();
+
+  // Timeframe buttons
+  const tfMap = {"tf_1m":"1m","tf_5m":"5m","tf_1h":"1h","tf_1d":"1d"};
+  for(const id in tfMap){
+    const b = document.getElementById(id);
+    if(b) b.addEventListener("click", ()=>setTimeframe(tfMap[id]));
+  }
+      checkAlerts();
+      return;
+    }
+
+    if(!apiKey){
+      updateStatusPills();
+      toast("Paste your API key (or turn Demo Mode ON).");
+      return;
+    }
+
+    localStorage.setItem(KEY.api, apiKey);
+    updateStatusPills();
 
     try{
       for(const sym of watch){
@@ -810,6 +1261,7 @@
         }
       }
       renderAll();
+      checkAlerts();
     } catch(e){
       console.error(e);
       toast("Price update failed (key/plan/rate limits).");
@@ -819,6 +1271,7 @@
   }
 
   function startLive(){
+    setDemoMode("off");
     saveApiKey();
     const ms = Number(document.getElementById("interval").value);
     stopLive(false);
@@ -858,6 +1311,7 @@
   function resetAccount(){
     if(!confirm("Reset portfolio and cash back to £100,000?")) return;
     setCash(DEFAULT_CASH);
+    setStartCash(DEFAULT_CASH);
     setPositions({});
     setHistory([]);
     setSeries({});
@@ -867,6 +1321,7 @@
   }
 
   function openTicket(side){
+    modalError(null);
     document.getElementById("backdrop").classList.add("show");
     document.getElementById("ticketSide").value = side || "BUY";
     document.getElementById("ticketSymbol").value = getActiveSymbol();
@@ -914,7 +1369,23 @@
     if(!sym || !isFinite(amount) || amount<=0) return toast("Enter a valid symbol and £ amount.");
 
     let price;
-    try{ price = requirePrice(sym); } catch(e){ return toast(e.message || String(e)); }
+    try{ price = requirePrice(sym); } catch(e){ const m = e.message || String(e); modalError(m); toast(m); return; }
+
+    const sharesPreview = amount / price;
+    const cash = getCash();
+    const cashAfter = (side==="BUY") ? (cash - amount) : (cash + amount);
+    const equityNow = (function(){
+      const positions = getPositions();
+      let mkt=0;
+      for(const s of Object.keys(positions)){
+        const sh = positions[s].shares; const px2 = lastPrices[s]||0;
+        mkt += sh*px2;
+      }
+      return getCash()+mkt;
+    })();
+    const riskPct = equityNow>0 ? (amount/equityNow)*100 : 0;
+    const summary = `${side} ${gbp(amount)} of ${sym}\n≈ ${sharesPreview.toFixed(6)} shares @ ${gbp(price)}\nRisk: ${riskPct.toFixed(2)}% of equity\nCash after: ${gbp(cashAfter)}`;
+    if(!confirm(summary)) return;
 
     if(side==="BUY") buyByAmount(sym, amount, price);
     else sellByAmount(sym, amount, price);
@@ -933,6 +1404,8 @@
     const pos = positions[sym];
     if(!pos){
       positions[sym] = { shares: shares, avg: price };
+      const opened = getPosOpened();
+      if(!opened[sym]){ opened[sym] = Date.now(); setPosOpened(opened); }
     } else {
       const newShares = pos.shares + shares;
       const newAvg = ((pos.shares*pos.avg) + (shares*price)) / newShares;
@@ -963,7 +1436,11 @@
     setCash(getCash() + proceeds);
 
     const remaining = pos.shares - sharesToSell;
-    if(remaining <= 1e-9) delete positions[sym];
+    if(remaining <= 1e-9){
+      delete positions[sym];
+      const opened = getPosOpened();
+      if(opened[sym]){ delete opened[sym]; setPosOpened(opened); }
+    }
     else positions[sym] = { shares: remaining, avg: pos.avg };
     setPositions(positions);
 
@@ -1092,17 +1569,83 @@
     showView("watch");
   }
 
+  
+  function openPositionModal(sym){
+    const positions = getPositions();
+    const pos = positions[sym];
+    if(!pos){ toast("No position."); return; }
+    const openedMap = getPosOpened();
+    const openedTs = openedMap[sym] || null;
+
+    const px = lastPrices[sym] || 0;
+    const value = px * pos.shares;
+    const basis = pos.avg * pos.shares;
+    const pl = value - basis;
+    const pct = basis>0 ? (pl/basis) : 0;
+
+    document.getElementById("posTitle").textContent = `${sym} — ${nameOf(sym)}`;
+    document.getElementById("posSub").textContent = `Value: ${gbp(value)} • Basis: ${gbp(basis)}`;
+    document.getElementById("posShares").textContent = Number(pos.shares).toFixed(6);
+    document.getElementById("posAvg").textContent = gbp(pos.avg);
+    document.getElementById("posPx").textContent = px ? gbp(px) : "—";
+    const plEl = document.getElementById("posPL");
+    plEl.textContent = gbp(pl);
+    plEl.className = pl>=0 ? "pos" : "neg";
+    const pctEl = document.getElementById("posPct");
+    pctEl.textContent = (pct*100).toFixed(2) + "%";
+    pctEl.className = pct>=0 ? "pos" : "neg";
+    document.getElementById("posOpened").textContent = openedTs ? new Date(openedTs).toLocaleString() : "—";
+
+    localStorage.setItem("papertrading_pos_modal_sym", sym);
+    document.getElementById("posBackdrop").classList.add("show");
+  }
+  function closePositionModal(){ document.getElementById("posBackdrop").classList.remove("show"); }
+
+  function closePositionPercent(pct){
+    const sym = localStorage.getItem("papertrading_pos_modal_sym");
+    if(!sym) return;
+    const positions = getPositions();
+    const pos = positions[sym];
+    if(!pos) return;
+    const px = lastPrices[sym];
+    if(!px){ toast("No live price yet."); return; }
+    const value = pos.shares * px;
+    const amount = value * (pct/100);
+    const summary = `SELL ${pct}% of ${sym}\n≈ ${gbp(amount)} at ${gbp(px)}\nProceed?`;
+    if(!confirm(summary)) return;
+    sellByAmount(sym, amount, px);
+    renderAll();
+    // refresh modal
+    const still = getPositions()[sym];
+    if(still) openPositionModal(sym);
+    else closePositionModal();
+  }
+
   // init
   document.getElementById("startBtn").addEventListener("click", startLive);
   document.getElementById("stopBtn").addEventListener("click", ()=>stopLive(true));
-  document.getElementById("apiKey").addEventListener("change", saveApiKey);
+  const tb = document.getElementById("testBtn");
+  if(tb) tb.addEventListener("click", ()=>{ toast("Refreshing prices…"); refreshPrices(); });
+  document.getElementById("apiKey").addEventListener("change", ()=>{ saveApiKey(); updateStatusPills(); });
+  const dm = document.getElementById("demoMode");
+  if(dm){ dm.addEventListener("change", ()=>{ setDemoMode(dm.value); }); }
 
   document.getElementById("globalSymbol").addEventListener("keydown", (e)=>{
     if(e.key==="Enter"){ quickAdd(); }
   });
 
   loadApiKey();
+  getStartCash();
   getCash();
+  const dmSel = document.getElementById("demoMode");
+  if(dmSel) dmSel.value = getDemoMode();
+  const thSel = document.getElementById("themeMode");
+  if(thSel){ thSel.value = getTheme(); thSel.addEventListener("change", ()=>setTheme(thSel.value)); }
+  setTheme(getTheme());
+  updateStatusPills();
+  sessionInitIfNeeded();
+  renderAlerts();
+  syncTimeframeButtons();
   getWatchlist();
   if(!localStorage.getItem(KEY.active)) localStorage.setItem(KEY.active, "AAPL");
   discStateLoad();
@@ -1120,5 +1663,56 @@
   document.getElementById("ticketSymbol").addEventListener("input", syncTicket);
   document.getElementById("ticketAmount").addEventListener("input", syncTicket);
 </script>
+<div id="globalToast" class="globalToast"></div>
+
+<div id="posBackdrop" class="backdrop" onclick="closePositionModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modalTop">
+      <div>
+        <div style="font-weight:1100; font-size:16px;" id="posTitle">Position</div>
+        <div class="muted small" id="posSub">—</div>
+      </div>
+      <button class="xbtn" onclick="closePositionModal()">✕</button>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="muted">Shares</div>
+        <b id="posShares">—</b>
+      </div>
+      <div class="kpi">
+        <div class="muted">Avg cost</div>
+        <b id="posAvg">—</b>
+      </div>
+      <div class="kpi">
+        <div class="muted">Current</div>
+        <b id="posPx">—</b>
+      </div>
+      <div class="kpi">
+        <div class="muted">P/L</div>
+        <b id="posPL">—</b>
+      </div>
+      <div class="kpi">
+        <div class="muted">% Return</div>
+        <b id="posPct">—</b>
+      </div>
+      <div class="kpi">
+        <div class="muted">Opened</div>
+        <b id="posOpened">—</b>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <button class="btn" style="flex:1;" onclick="closePositionPercent(25)">Close 25%</button>
+      <button class="btn ghost" style="flex:1;" onclick="closePositionPercent(50)">Close 50%</button>
+      <button class="btn danger" style="flex:1;" onclick="closePositionPercent(100)">Close 100%</button>
+    </div>
+
+    <div class="warn">
+      Close buttons sell by £ amount at the latest fetched price.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
