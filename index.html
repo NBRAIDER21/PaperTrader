@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PaperToro — Multi‑Asset Paper Trading (GBP)</title>
+  <title>PaperTrading — Paper Investing (GBP)</title>
+  <meta name="apple-mobile-web-app-title" content="PaperTrading">
   <style>
     :root{
-      --bg:#0b0f14; --panel:#111826; --panel2:#0f1520; --panel3:#0b1220;
+      --bg:#0b0f14; --panel:#111826; --panel3:#0b1220;
       --text:#e7eefc; --muted:#9bb0d0; --line:#1f2a3d; --good:#27e69a; --bad:#ff6b6b;
       --accent1:#00d084; --accent2:#1b7cff;
     }
     *{ box-sizing:border-box; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
     body{ margin:0; background:linear-gradient(180deg,#070a0f,#0b0f14 30%); color:var(--text); }
-    .app{ display:grid; grid-template-columns: 270px 1fr; min-height:100vh; }
+    .app{ display:grid; grid-template-columns: 290px 1fr; min-height:100vh; }
     @media (max-width: 920px){ .app{ grid-template-columns: 1fr; } }
     .sidebar{
       position:sticky; top:0; height:100vh;
@@ -25,19 +26,17 @@
     .logo{
       width:40px; height:40px; border-radius:14px;
       background:linear-gradient(135deg,var(--accent1),var(--accent2));
-      display:grid; place-items:center; font-weight:900; letter-spacing:.3px;
+      display:grid; place-items:center; font-weight:1000; letter-spacing:.3px;
     }
-    .brandTitle{ font-weight:900; letter-spacing:.3px; }
+    .brandTitle{ font-weight:1000; letter-spacing:.3px; }
     .brandSub{ color:var(--muted); font-size:12px; margin-top:2px; }
-
     .nav{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
     .nav button{
       width:100%; text-align:left; padding:10px 12px;
       border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.02);
-      color:var(--text); cursor:pointer; font-weight:800;
+      color:var(--text); cursor:pointer; font-weight:900;
     }
     .nav button.active{ background:linear-gradient(135deg,rgba(0,208,132,.18),rgba(27,124,255,.18)); border-color:rgba(27,124,255,.35); }
-
     .pillRow{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
     .pill{
       padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:var(--panel3);
@@ -47,7 +46,6 @@
     .badge{ display:inline-flex; gap:8px; align-items:center; }
     .dot{ width:8px; height:8px; border-radius:50%; background:var(--accent1); box-shadow:0 0 12px rgba(0,208,132,.8); }
     .dot.off{ background:#6f86aa; box-shadow:none; }
-
     .main{ padding:16px; }
     .topbar{
       display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
@@ -61,15 +59,13 @@
     .search input{
       width:100%; border:none; background:transparent; color:var(--text); outline:none; font-size:14px;
     }
-
     .btn{
       border-radius:12px; border:1px solid var(--line); padding:10px 12px;
       background:linear-gradient(135deg,var(--accent1),var(--accent2)); color:var(--text);
-      font-weight:900; cursor:pointer;
+      font-weight:1000; cursor:pointer;
     }
-    .btn.ghost{ background:var(--panel3); font-weight:800; }
+    .btn.ghost{ background:var(--panel3); font-weight:900; }
     .btn.danger{ background:linear-gradient(135deg,#ff4d4d,#ff9a3d); border:none; }
-
     .grid{ display:grid; grid-template-columns: 1.25fr .75fr; gap:14px; }
     @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
     .card{
@@ -82,49 +78,48 @@
     .small{ font-size:12px; color:#93a9ce; }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .right{ text-align:right; }
-
     table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px; }
     th, td{ text-align:left; padding:10px 10px; border-bottom:1px solid var(--line); font-size:13px; }
-    th{ color:#bcd0f7; font-weight:900; background:var(--panel3); }
+    th{ color:#bcd0f7; font-weight:1000; background:var(--panel3); }
     tr:hover td{ background:rgba(255,255,255,.02); }
-    .pos{ color:var(--good); font-weight:900; }
-    .neg{ color:var(--bad); font-weight:900; }
-
+    .pos{ color:var(--good); font-weight:1000; }
+    .neg{ color:var(--bad); font-weight:1000; }
     .tag{
-      padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:12px;
-      color:var(--muted); background:var(--panel3); display:inline-flex; gap:8px; align-items:center;
+      padding:8px 10px; border:1px solid var(--line); border-radius:16px; font-size:12px;
+      color:var(--muted); background:var(--panel3); display:flex; gap:10px; align-items:flex-start;
+      min-width: 240px; cursor:pointer;
     }
     .tag b{ color:var(--text); }
+    .tag .col{ display:flex; flex-direction:column; gap:4px; }
+    .tag .price{ font-weight:1000; color:var(--text); }
+    .tag .x{ margin-left:auto; color:var(--muted); cursor:pointer; }
     .toast{
       margin-top:10px; padding:10px 12px; border-radius:14px; border:1px solid var(--line);
       background:var(--panel3); color:#cfe0ff; font-size:13px; display:none;
     }
     .toast.show{ display:block; }
-
-    /* Asset header + chart */
     .assetHeader{
       display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; justify-content:space-between;
       margin-bottom:10px;
     }
     .assetLeft{ display:flex; flex-direction:column; gap:6px; }
-    .assetSym{ font-size:18px; font-weight:1000; letter-spacing:.4px; }
-    .assetPrice{ font-size:22px; font-weight:1000; }
-    .assetChange{ font-size:13px; font-weight:900; }
+    .assetSym{ font-size:18px; font-weight:1100; letter-spacing:.4px; }
+    .assetName{ font-size:13px; color:var(--muted); }
+    .assetPrice{ font-size:22px; font-weight:1100; }
+    .assetChange{ font-size:13px; font-weight:1000; }
     .sparkWrap{ background:var(--panel3); border:1px solid var(--line); border-radius:14px; padding:10px; }
     canvas{ display:block; width:100%; height:100px; }
-
-    /* Modal */
     .backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center;
       padding:16px; z-index:50;
     }
     .backdrop.show{ display:flex; }
     .modal{
-      width:min(620px, 100%); background:linear-gradient(180deg,var(--panel),#0d1320);
+      width:min(720px, 100%); background:linear-gradient(180deg,var(--panel),#0d1320);
       border:1px solid var(--line); border-radius:18px; padding:14px;
     }
     .modalTop{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .x{ background:transparent; border:1px solid var(--line); color:var(--text); border-radius:12px; padding:8px 10px; cursor:pointer; }
+    .xbtn{ background:transparent; border:1px solid var(--line); color:var(--text); border-radius:12px; padding:8px 10px; cursor:pointer; }
     .form{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     @media (max-width: 520px){ .form{ grid-template-columns:1fr; } }
     .field{ display:flex; flex-direction:column; gap:6px; }
@@ -136,25 +131,18 @@
     .kpi{ border:1px solid var(--line); border-radius:14px; background:var(--panel3); padding:10px 12px; }
     .kpi .muted{ font-size:12px; }
     .kpi b{ font-size:14px; }
-
     .warn{
       margin-top:10px; padding:10px 12px; border-radius:14px;
       border:1px solid rgba(255,154,61,.35);
       background:rgba(255,154,61,.08);
       color:#ffd4b8; font-size:12px;
     }
-
-    .discoverControls{
-      display:grid; grid-template-columns: 1fr 1fr 1fr auto;
-      gap:10px; align-items:end;
+    .ok{
+      margin-top:10px; padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(39,230,154,.25);
+      background:rgba(39,230,154,.06);
+      color:#ccffe9; font-size:12px;
     }
-    @media (max-width: 760px){ .discoverControls{ grid-template-columns:1fr; } }
-    .discoverList{ margin-top:10px; max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:14px; }
-    .item{ padding:10px 12px; border-bottom:1px solid var(--line); display:flex; gap:10px; justify-content:space-between; align-items:center; }
-    .item:last-child{ border-bottom:none; }
-    .item:hover{ background:rgba(255,255,255,.02); }
-    .item .meta{ display:flex; flex-direction:column; gap:3px; }
-    .item .meta b{ letter-spacing:.2px; }
   </style>
 </head>
 <body>
@@ -163,8 +151,8 @@
     <div class="brand">
       <div class="logo">PT</div>
       <div>
-        <div class="brandTitle">PaperToro</div>
-        <div class="brandSub">multi‑asset paper trading • GBP</div>
+        <div class="brandTitle">PaperTrading</div>
+        <div class="brandSub">paper trading • real quotes • GBP</div>
       </div>
     </div>
 
@@ -187,16 +175,15 @@
     <div class="card" style="margin-top:12px; padding:12px; background:var(--panel3);">
       <h3 style="margin-bottom:8px;">Live Setup</h3>
       <div class="field">
-        <label class="muted">Massive/Polygon API Key</label>
+        <label class="muted">Polygon API Key</label>
         <input id="apiKey" placeholder="API_KEY" />
       </div>
       <div class="field" style="margin-top:10px;">
         <label class="muted">Refresh interval</label>
         <select id="interval">
-          <option value="1000" selected>1 second (fast)</option>
+          <option value="1000">1 second (fast)</option>
           <option value="2000">2 seconds</option>
-          <option value="3000">3 seconds</option>
-          <option value="5000">5 seconds</option>
+          <option value="5000" selected>5 seconds (recommended)</option>
           <option value="10000">10 seconds</option>
         </select>
       </div>
@@ -204,10 +191,13 @@
         <button class="btn" style="flex:1;" id="startBtn">Start</button>
         <button class="btn ghost" style="flex:1;" id="stopBtn">Stop</button>
       </div>
+
       <div class="warn">
-        “Every single UK stock + crypto + commodities” is too large to preload.
-        Instead, use <b>Discover</b> to search the provider’s full symbol database, then add what you want to Watchlist.
-        1‑second refresh may hit rate limits if you track many symbols.
+        Holdings revalue at real market prices whenever the app refreshes.
+        Updating while the app is closed needs a backend/push notifications (Safari/iOS won’t run this in the background).
+      </div>
+      <div class="ok">
+        Tip: keep your watchlist small (10–25 symbols) for faster refreshes.
       </div>
     </div>
 
@@ -226,7 +216,7 @@
     <div class="topbar">
       <div class="search">
         <span class="muted">🔎</span>
-        <input id="globalSymbol" placeholder="Quick add symbol (e.g. AAPL, VOD, X:BTCUSD, C:EURUSD)" />
+        <input id="globalSymbol" placeholder="Quick add symbol (AAPL, VOD, X:BTCUSD, C:XAUUSD)" />
       </div>
       <div class="row">
         <button class="btn ghost" onclick="quickAdd()">Add</button>
@@ -240,53 +230,63 @@
         <div class="assetHeader">
           <div class="assetLeft">
             <div class="assetSym" id="assetSym">AAPL</div>
+            <div class="assetName" id="assetName">Apple Inc.</div>
             <div class="row" style="align-items:baseline;">
               <div class="assetPrice" id="assetPrice">£—</div>
               <div class="assetChange" id="assetChange">—</div>
             </div>
-            <div class="muted small">Stocks use “last trade”. Crypto uses last trade. FX uses last quote (mid). GBP conversion uses FX USD→GBP.</div>
+            <div class="muted small">Trade by £ amount. The app converts it into shares at the current price.</div>
           </div>
           <div class="sparkWrap" style="width:min(520px, 100%);">
             <canvas id="spark" width="520" height="100"></canvas>
           </div>
         </div>
 
-        <!-- Views -->
         <div id="viewMarkets">
-          <h2>Markets</h2>
-          <div class="muted">Presets (tap to set active):</div>
+          <h2>Markets (presets)</h2>
+          <div class="muted">Tap to open:</div>
           <div class="row" style="margin-top:12px;">
-            <span class="tag" onclick="setActiveSymbol('AAPL')"><b>AAPL</b><span class="muted" id="px_AAPL"></span></span>
-            <span class="tag" onclick="setActiveSymbol('TSLA')"><b>TSLA</b><span class="muted" id="px_TSLA"></span></span>
-            <span class="tag" onclick="setActiveSymbol('NVDA')"><b>NVDA</b><span class="muted" id="px_NVDA"></span></span>
-            <span class="tag" onclick="setActiveSymbol('X:BTCUSD')"><b>X:BTCUSD</b><span class="muted" id="px_X:BTCUSD"></span></span>
-            <span class="tag" onclick="setActiveSymbol('C:EURUSD')"><b>C:EURUSD</b><span class="muted" id="px_C:EURUSD"></span></span>
-            <span class="tag" onclick="setActiveSymbol('C:XAUUSD')"><b>C:XAUUSD</b><span class="muted" id="px_C:XAUUSD"></span></span>
+            <span class="tag" onclick="setActiveSymbol('AAPL')">
+              <div class="col"><b>AAPL</b><span class="small" id="nm_AAPL">Apple Inc.</span></div>
+              <div class="col" style="align-items:flex-end;"><span class="price" id="px_AAPL">—</span><span class="small muted">tap</span></div>
+            </span>
+            <span class="tag" onclick="setActiveSymbol('TSLA')">
+              <div class="col"><b>TSLA</b><span class="small" id="nm_TSLA">Tesla, Inc.</span></div>
+              <div class="col" style="align-items:flex-end;"><span class="price" id="px_TSLA">—</span><span class="small muted">tap</span></div>
+            </span>
+            <span class="tag" onclick="setActiveSymbol('NVDA')">
+              <div class="col"><b>NVDA</b><span class="small" id="nm_NVDA">NVIDIA Corporation</span></div>
+              <div class="col" style="align-items:flex-end;"><span class="price" id="px_NVDA">—</span><span class="small muted">tap</span></div>
+            </span>
+            <span class="tag" onclick="setActiveSymbol('X:BTCUSD')">
+              <div class="col"><b>X:BTCUSD</b><span class="small" id="nm_X:BTCUSD">Bitcoin / USD</span></div>
+              <div class="col" style="align-items:flex-end;"><span class="price" id="px_X:BTCUSD">—</span><span class="small muted">tap</span></div>
+            </span>
+            <span class="tag" onclick="setActiveSymbol('C:XAUUSD')">
+              <div class="col"><b>C:XAUUSD</b><span class="small" id="nm_C:XAUUSD">Gold / USD</span></div>
+              <div class="col" style="align-items:flex-end;"><span class="price" id="px_C:XAUUSD">—</span><span class="small muted">tap</span></div>
+            </span>
           </div>
           <div id="toast" class="toast"></div>
         </div>
 
         <div id="viewDiscover" style="display:none;">
-          <h2>Discover (UK stocks + crypto + FX)</h2>
-          <div class="muted">
-            Search the provider’s full symbol database and add results to your watchlist.
-            UK coverage depends on your plan and the provider’s listings.
-          </div>
-
-          <div class="discoverControls" style="margin-top:12px;">
-            <div class="field">
+          <h2>Discover</h2>
+          <div class="muted">Search tickers, then add to Watchlist. Names will show everywhere once added.</div>
+          <div class="row" style="margin-top:12px;">
+            <div class="field" style="flex:1; min-width:240px;">
               <label class="muted">Search</label>
-              <input id="discQuery" placeholder="e.g. Vodafone, VOD, BP, BTC" />
+              <input id="discQuery" placeholder="e.g. Vodafone, BP, HSBC, Bitcoin" />
             </div>
-            <div class="field">
+            <div class="field" style="min-width:190px;">
               <label class="muted">Asset class</label>
               <select id="discAsset">
                 <option value="stocks" selected>Stocks</option>
                 <option value="crypto">Crypto</option>
-                <option value="forex">Forex (FX/metals)</option>
+                <option value="fx">FX / Metals</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field" style="min-width:160px;">
               <label class="muted">Locale</label>
               <select id="discLocale">
                 <option value="">Any</option>
@@ -294,34 +294,31 @@
                 <option value="us">US</option>
               </select>
             </div>
-            <button class="btn" onclick="discoverSearch()">Search</button>
+            <button class="btn" style="height:42px; align-self:end;" onclick="discoverSearch(true)">Search</button>
           </div>
 
-          <div class="discoverList" id="discResults"></div>
+          <div id="discResults" class="card" style="margin-top:12px; padding:0; overflow:hidden;"></div>
           <div class="row" style="justify-content:space-between; margin-top:10px;">
             <button class="btn ghost" onclick="discoverPrev()">◀ Prev</button>
             <div class="muted small" id="discPage">Page 1</div>
             <button class="btn ghost" onclick="discoverNext()">Next ▶</button>
           </div>
-          <div class="small" style="margin-top:10px;">
-            For Crypto, tickers are usually like <b>X:BTCUSD</b>. For FX/metals: <b>C:EURUSD</b>, <b>C:XAUUSD</b>.
-          </div>
         </div>
 
         <div id="viewWatch" style="display:none;">
           <h2>Watchlist</h2>
-          <div class="muted">Tap a symbol to set it active. Long lists + 1s refresh can rate-limit.</div>
+          <div class="muted">Names are shown under each symbol. Tap a card to open it.</div>
           <div class="row" style="margin-top:12px;" id="watchTags"></div>
         </div>
 
         <div id="viewPortfolio" style="display:none;">
           <h2>Portfolio</h2>
-          <div class="muted">Holdings update using the latest fetched quotes.</div>
+          <div class="muted">Holdings adjust to real prices on each refresh.</div>
           <div style="margin-top:10px; overflow:auto;">
             <table>
               <thead>
                 <tr>
-                  <th>Symbol</th>
+                  <th>Instrument</th>
                   <th class="right">Shares</th>
                   <th class="right">Avg Cost</th>
                   <th class="right">Price</th>
@@ -343,10 +340,10 @@
                 <tr>
                   <th>Time</th>
                   <th>Side</th>
-                  <th>Symbol</th>
+                  <th>Instrument</th>
+                  <th class="right">£ Amount</th>
                   <th class="right">Shares</th>
                   <th class="right">Price</th>
-                  <th class="right">Notional</th>
                 </tr>
               </thead>
               <tbody id="historyBody"></tbody>
@@ -356,45 +353,28 @@
       </section>
 
       <aside class="card">
-        <h2>Quick Actions</h2>
-        <div class="row">
+        <h2>Trade by £</h2>
+        <div class="muted">Enter a money amount. We show the share conversion underneath.</div>
+        <div class="row" style="margin-top:12px;">
           <button class="btn" style="flex:1;" onclick="openTicket('BUY')">Buy</button>
           <button class="btn ghost" style="flex:1;" onclick="openTicket('SELL')">Sell</button>
         </div>
-
-        <div class="card" style="margin-top:12px; padding:12px; background:var(--panel3);">
-          <h3>Active Symbol</h3>
-          <div class="row" style="justify-content:space-between;">
-            <div><b id="activeSymMini">AAPL</b></div>
-            <div class="muted" id="activePxMini">—</div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn ghost" style="flex:1;" onclick="setActiveSymbol(prompt('Symbol?')||'')">Set</button>
-            <button class="btn ghost" style="flex:1;" onclick="openTicket()">Trade</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px; padding:12px; background:var(--panel3);">
-          <h3>What I changed</h3>
-          <div class="muted">
-            You asked for “every UK stock + commodities + crypto”.
-            This version adds a <b>Discover</b> search against the provider’s reference tickers, instead of trying to preload thousands.
-          </div>
+        <div class="small" style="margin-top:10px;">
+          Want background updates while the app is closed? That needs a tiny server + push/email alerts.
         </div>
       </aside>
     </div>
   </main>
 </div>
 
-<!-- Trade Modal -->
 <div id="backdrop" class="backdrop" onclick="closeTicket(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modalTop">
       <div>
-        <div style="font-weight:1000; font-size:16px;">Order Ticket</div>
-        <div class="muted small">Market order at the latest fetched price (GBP)</div>
+        <div style="font-weight:1100; font-size:16px;">Order Ticket</div>
+        <div class="muted small">Enter £ amount — shares are calculated at the latest fetched price.</div>
       </div>
-      <button class="x" onclick="closeTicket()">✕</button>
+      <button class="xbtn" onclick="closeTicket()">✕</button>
     </div>
 
     <div class="form">
@@ -407,26 +387,27 @@
       </div>
       <div class="field">
         <label class="muted">Symbol</label>
-        <input id="ticketSymbol" placeholder="AAPL / X:BTCUSD / C:EURUSD" />
+        <input id="ticketSymbol" placeholder="AAPL / X:BTCUSD / C:XAUUSD" />
+      </div>
+
+      <div class="field">
+        <label class="muted">£ Amount</label>
+        <input id="ticketAmount" inputmode="decimal" placeholder="1000" />
       </div>
       <div class="field">
-        <label class="muted">Shares</label>
-        <input id="ticketShares" inputmode="decimal" placeholder="1" />
-      </div>
-      <div class="field">
-        <label class="muted">Last Price (GBP)</label>
+        <label class="muted">Current Price (GBP)</label>
         <input id="ticketPrice" disabled />
       </div>
     </div>
 
     <div class="kpis">
       <div class="kpi">
-        <div class="muted">Cash after</div>
-        <b id="cashAfter">—</b>
+        <div class="muted">Shares (calculated)</div>
+        <b id="ticketSharesCalc">—</b>
       </div>
       <div class="kpi">
-        <div class="muted">Order value</div>
-        <b id="orderValue">—</b>
+        <div class="muted">Cash after</div>
+        <b id="cashAfter">—</b>
       </div>
     </div>
 
@@ -435,30 +416,43 @@
       <button class="btn ghost" style="flex:1;" onclick="closeTicket()">Cancel</button>
     </div>
 
-    <div class="small" style="margin-top:10px; color:#93a9ce;">
-      Selling adds proceeds directly to cash balance ✅
+    <div class="warn">
+      SELL: if £ amount is larger than your holding’s value, it sells the maximum possible.
     </div>
   </div>
 </div>
 
 <script>
   const KEY = {
-    api: "papertoro_apiKey",
-    cash: "papertoro_cash_gbp",
-    pos: "papertoro_positions",
-    hist: "papertoro_history",
-    watch: "papertoro_watchlist",
-    active: "papertoro_active_symbol",
-    series: "papertoro_series",
-    discCursor: "papertoro_disc_cursor",
-    discState: "papertoro_disc_state"
+    api: "papertrading_apiKey",
+    cash: "papertrading_cash_gbp",
+    pos: "papertrading_positions",
+    hist: "papertrading_history",
+    watch: "papertrading_watchlist",
+    active: "papertrading_active_symbol",
+    series: "papertrading_series",
+    names: "papertrading_names",
+    discState: "papertrading_disc_state"
   };
   const DEFAULT_CASH = 100000;
 
   let timer = null;
-  let lastPrices = {}; // symbol -> gbp price
+  let lastPrices = {};
   let usdToGbpCache = null;
   let usdToGbpTs = 0;
+
+  function getNames(){ const raw = localStorage.getItem(KEY.names); return raw ? JSON.parse(raw) : {}; }
+  function setNames(map){ localStorage.setItem(KEY.names, JSON.stringify(map)); }
+  function nameOf(sym){
+    const map = getNames();
+    return map[sym] || (sym.startsWith("X:") ? "Crypto" : sym.startsWith("C:") ? "FX / Metals" : "Stock");
+  }
+  function rememberName(sym, fullName){
+    if(!sym || !fullName) return;
+    const map = getNames();
+    map[sym] = fullName;
+    setNames(map);
+  }
 
   function loadApiKey(){ const v = localStorage.getItem(KEY.api) || ""; document.getElementById("apiKey").value = v; return v; }
   function saveApiKey(){ const v = document.getElementById("apiKey").value.trim(); localStorage.setItem(KEY.api, v); toast("API key saved locally."); return v; }
@@ -475,8 +469,13 @@
   function getWatchlist(){
     const raw = localStorage.getItem(KEY.watch);
     if(!raw){
-      const seed=["AAPL","TSLA","NVDA","X:BTCUSD","C:EURUSD","C:XAUUSD"];
+      const seed=["AAPL","TSLA","NVDA","X:BTCUSD","C:XAUUSD"];
       localStorage.setItem(KEY.watch, JSON.stringify(seed));
+      rememberName("AAPL","Apple Inc.");
+      rememberName("TSLA","Tesla, Inc.");
+      rememberName("NVDA","NVIDIA Corporation");
+      rememberName("X:BTCUSD","Bitcoin / USD");
+      rememberName("C:XAUUSD","Gold / USD");
       return seed;
     }
     return JSON.parse(raw);
@@ -493,13 +492,10 @@
     syncActiveHeader();
     renderWatch();
     refreshPrices();
-    toast(`Active symbol: ${sym}`);
+    toast(`Active: ${sym}`);
   }
 
-  function getSeries(){
-    const raw = localStorage.getItem(KEY.series);
-    return raw ? JSON.parse(raw) : {};
-  }
+  function getSeries(){ const raw = localStorage.getItem(KEY.series); return raw ? JSON.parse(raw) : {}; }
   function setSeries(s){ localStorage.setItem(KEY.series, JSON.stringify(s)); }
 
   function gbp(n){ if(!isFinite(n)) return "—"; return new Intl.NumberFormat("en-GB",{ style:"currency", currency:"GBP" }).format(n); }
@@ -534,16 +530,32 @@
     if(view==="history") document.getElementById("navHist").classList.add("active");
   }
 
+  function escapeHtml(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  }
+
   function renderWatch(){
     const tags = document.getElementById("watchTags");
     tags.innerHTML = "";
     getWatchlist().forEach(sym=>{
-      const el = document.createElement("span");
-      el.className = "tag";
       const price = lastPrices[sym];
-      el.innerHTML = `<b>${sym}</b><span class="muted">${price ? gbp(price) : ""}</span>
-        <span class="muted" style="cursor:pointer;" title="Remove" onclick="event.stopPropagation(); removeWatch('${sym}')">✕</span>`;
+      const nm = nameOf(sym);
+
+      const el = document.createElement("div");
+      el.className = "tag";
+      el.innerHTML = `
+        <div class="col">
+          <b>${sym}</b>
+          <span class="small">${escapeHtml(nm)}</span>
+        </div>
+        <div class="col" style="align-items:flex-end;">
+          <span class="price">${price ? gbp(price) : "—"}</span>
+          <span class="small muted">tap</span>
+        </div>
+        <span class="x" title="Remove">✕</span>
+      `;
       el.onclick = ()=>setActiveSymbol(sym);
+      el.querySelector(".x").onclick = (ev)=>{ ev.stopPropagation(); removeWatch(sym); };
       tags.appendChild(el);
     });
   }
@@ -552,6 +564,7 @@
     const cash = getCash();
     const positions = getPositions();
     let mkt=0;
+
     const body = document.getElementById("portfolioBody");
     body.innerHTML = "";
 
@@ -571,9 +584,10 @@
         mkt += value;
 
         const tr = document.createElement("tr");
+        const nm = nameOf(sym);
         tr.innerHTML = `
-          <td><b>${sym}</b></td>
-          <td class="right">${Number(sh).toFixed(4)}</td>
+          <td><b>${sym}</b><div class="small muted">${escapeHtml(nm)}</div></td>
+          <td class="right">${Number(sh).toFixed(6)}</td>
           <td class="right">${gbp(avg)}</td>
           <td class="right">${px ? gbp(px) : "—"}</td>
           <td class="right">${px ? gbp(value) : "—"}</td>
@@ -599,34 +613,37 @@
     }
     h.slice(0,50).forEach(t=>{
       const tr = document.createElement("tr");
+      const nm = nameOf(t.symbol);
       tr.innerHTML = `
         <td class="muted">${new Date(t.ts).toLocaleString()}</td>
         <td><b class="${t.side==="BUY" ? "pos":"neg"}">${t.side}</b></td>
-        <td><b>${t.symbol}</b></td>
-        <td class="right">${Number(t.shares).toFixed(4)}</td>
+        <td><b>${t.symbol}</b><div class="small muted">${escapeHtml(nm)}</div></td>
+        <td class="right">${gbp(t.amount_gbp)}</td>
+        <td class="right">${Number(t.shares).toFixed(6)}</td>
         <td class="right">${gbp(t.price_gbp)}</td>
-        <td class="right">${gbp(t.notional_gbp)}</td>
       `;
       body.appendChild(tr);
     });
   }
 
   function renderMarketChips(){
-    const chips = ["AAPL","TSLA","NVDA","X:BTCUSD","C:EURUSD","C:XAUUSD"];
+    const chips = ["AAPL","TSLA","NVDA","X:BTCUSD","C:XAUUSD"];
     chips.forEach(sym=>{
+      const p = lastPrices[sym];
       const el = document.getElementById("px_"+sym);
-      if(el) el.textContent = lastPrices[sym] ? gbp(lastPrices[sym]) : "";
+      if(el) el.textContent = p ? gbp(p) : "—";
+      const nmEl = document.getElementById("nm_"+sym);
+      if(nmEl) nmEl.textContent = nameOf(sym);
     });
   }
 
   function syncActiveHeader(){
     const sym = getActiveSymbol();
     document.getElementById("assetSym").textContent = sym;
-    document.getElementById("activeSymMini").textContent = sym;
+    document.getElementById("assetName").textContent = nameOf(sym);
 
     const px = lastPrices[sym];
     document.getElementById("assetPrice").textContent = px ? gbp(px) : "£—";
-    document.getElementById("activePxMini").textContent = px ? gbp(px) : "—";
 
     const series = (getSeries()[sym] || []).slice(-60);
     const el = document.getElementById("assetChange");
@@ -653,7 +670,7 @@
     if(series.length < 2){
       ctx.fillStyle = "#9bb0d0";
       ctx.font = "12px ui-sans-serif";
-      ctx.fillText("No data yet — start live updates.", 10, 55);
+      ctx.fillText("No data yet — press Refresh or Start.", 10, 55);
       return;
     }
 
@@ -701,16 +718,11 @@
     syncActiveHeader();
   }
 
-  // ---- Price routing ----
   function isCrypto(sym){ return sym.startsWith("X:"); }
   function isForex(sym){ return sym.startsWith("C:"); }
   function parsePair(sym){
-    // X:BTCUSD -> {from:BTC, to:USD}
-    // C:EURUSD -> {from:EUR, to:USD}
     const s = sym.split(":")[1] || "";
-    const from = s.slice(0,3);
-    const to = s.slice(3,6);
-    return {from, to};
+    return {from: s.slice(0,3), to: s.slice(3,6)};
   }
 
   async function stockLastTradeUSD(symbol, apiKey){
@@ -724,7 +736,6 @@
   }
 
   async function cryptoLastTradeUSD(ticker, apiKey){
-    // /v1/last/crypto/{from}/{to} e.g. /v1/last/crypto/BTC/USD
     const {from, to} = parsePair(ticker);
     const url = `https://api.polygon.io/v1/last/crypto/${encodeURIComponent(from)}/${encodeURIComponent(to)}?apiKey=${encodeURIComponent(apiKey)}`;
     const r = await fetch(url, { cache:"no-store" });
@@ -732,11 +743,10 @@
     const j = await r.json();
     const p = j?.last?.price;
     if(!p) throw new Error("No crypto last trade price");
-    return Number(p); // in "to" currency (typically USD)
+    return Number(p);
   }
 
   async function forexLastQuoteMidUSD(ticker, apiKey){
-    // /v1/last_quote/currencies/{from}/{to}
     const {from, to} = parsePair(ticker);
     const url = `https://api.polygon.io/v1/last_quote/currencies/${encodeURIComponent(from)}/${encodeURIComponent(to)}?apiKey=${encodeURIComponent(apiKey)}`;
     const r = await fetch(url, { cache:"no-store" });
@@ -745,7 +755,7 @@
     const bid = j?.last?.bid;
     const ask = j?.last?.ask;
     if(!(bid && ask)) throw new Error("No FX bid/ask");
-    return (Number(bid) + Number(ask)) / 2.0; // mid
+    return (Number(bid) + Number(ask)) / 2.0;
   }
 
   async function usdToGbp(apiKey){
@@ -763,20 +773,16 @@
   }
 
   async function fetchPriceGBP(sym, apiKey){
-    // Returns {gbp, native, nativeCcy}
     if(isCrypto(sym)){
-      const native = await cryptoLastTradeUSD(sym, apiKey); // usually USD
-      return { gbp: native * await usdToGbp(apiKey), native, nativeCcy: "USD" };
+      const native = await cryptoLastTradeUSD(sym, apiKey);
+      return native * await usdToGbp(apiKey);
     }
     if(isForex(sym)){
-      // FX quote is "to per from" (e.g. EURUSD) -> USD per EUR.
-      // We'll convert its USD price to GBP price for 1 unit of "from".
-      const native = await forexLastQuoteMidUSD(sym, apiKey); // USD per 1 "from"
-      return { gbp: native * await usdToGbp(apiKey), native, nativeCcy: "USD" };
+      const native = await forexLastQuoteMidUSD(sym, apiKey);
+      return native * await usdToGbp(apiKey);
     }
-    // default: stocks last trade is in USD for US equities
     const native = await stockLastTradeUSD(sym, apiKey);
-    return { gbp: native * await usdToGbp(apiKey), native, nativeCcy: "USD" };
+    return native * await usdToGbp(apiKey);
   }
 
   async function refreshPrices(){
@@ -791,13 +797,13 @@
     try{
       for(const sym of watch){
         try{
-          const {gbp: gbpPx} = await fetchPriceGBP(sym, apiKey);
+          const gbpPx = await fetchPriceGBP(sym, apiKey);
           lastPrices[sym] = gbpPx;
 
           const seriesAll = getSeries();
           const arr = seriesAll[sym] || [];
           arr.push(gbpPx);
-          seriesAll[sym] = arr.slice(-200);
+          seriesAll[sym] = arr.slice(-240);
           setSeries(seriesAll);
         } catch(e){
           console.warn("Price fetch failed", sym, e);
@@ -839,13 +845,11 @@
     renderWatch();
     refreshPrices();
   }
-
   function removeWatch(sym){
     const w = getWatchlist().filter(x=>x!==sym);
     setWatchlist(w);
     renderWatch();
   }
-
   function addFunds(amount){
     setCash(getCash() + Number(amount));
     toast(`Added ${gbp(amount)} virtual funds.`);
@@ -862,114 +866,119 @@
     renderAll();
   }
 
-  // ---- Ticket ----
   function openTicket(side){
     document.getElementById("backdrop").classList.add("show");
     document.getElementById("ticketSide").value = side || "BUY";
     document.getElementById("ticketSymbol").value = getActiveSymbol();
-    document.getElementById("ticketShares").value = "1";
+    document.getElementById("ticketAmount").value = "1000";
     syncTicket();
   }
   function closeTicket(){ document.getElementById("backdrop").classList.remove("show"); }
 
   function requirePrice(sym){
     const p = lastPrices[sym];
-    if(!p || !isFinite(p)) throw new Error("No live price yet. Start live updates or click Refresh.");
+    if(!p || !isFinite(p)) throw new Error("No live price yet. Press Refresh or Start first.");
     return p;
   }
 
   function syncTicket(){
     const sym = (document.getElementById("ticketSymbol").value||"").trim().toUpperCase();
     const side = document.getElementById("ticketSide").value;
-    const shares = Number(document.getElementById("ticketShares").value);
+    const amount = Number(document.getElementById("ticketAmount").value);
+
     const price = lastPrices[sym];
-
     document.getElementById("ticketPrice").value = price ? gbp(price) : "—";
-    const val = (price && isFinite(shares)) ? price*shares : NaN;
 
-    document.getElementById("orderValue").textContent = isFinite(val) ? gbp(val) : "—";
+    if(!(price && isFinite(amount) && amount>0)){
+      document.getElementById("ticketSharesCalc").textContent = "—";
+      document.getElementById("cashAfter").textContent = "—";
+      return;
+    }
+
+    const shares = amount / price;
+    document.getElementById("ticketSharesCalc").textContent = shares.toFixed(6);
+
     const cash = getCash();
-    if(side==="BUY" && isFinite(val)) document.getElementById("cashAfter").textContent = gbp(cash - val);
-    else if(side==="SELL" && isFinite(val)) document.getElementById("cashAfter").textContent = gbp(cash + val);
-    else document.getElementById("cashAfter").textContent = "—";
+    document.getElementById("cashAfter").textContent = (side==="BUY") ? gbp(cash - amount) : gbp(cash + amount);
   }
+
   document.getElementById("ticketSide").addEventListener("change", syncTicket);
   document.getElementById("ticketSymbol").addEventListener("input", syncTicket);
-  document.getElementById("ticketShares").addEventListener("input", syncTicket);
+  document.getElementById("ticketAmount").addEventListener("input", syncTicket);
 
   function submitTicket(){
     const side = document.getElementById("ticketSide").value;
     const sym = (document.getElementById("ticketSymbol").value||"").trim().toUpperCase();
-    const sh = Number(document.getElementById("ticketShares").value);
-    if(!sym || !isFinite(sh) || sh<=0) return toast("Enter a valid symbol and shares.");
+    const amount = Number(document.getElementById("ticketAmount").value);
+
+    if(!sym || !isFinite(amount) || amount<=0) return toast("Enter a valid symbol and £ amount.");
 
     let price;
     try{ price = requirePrice(sym); } catch(e){ return toast(e.message || String(e)); }
 
-    if(side==="BUY") doBuy(sym, sh, price);
-    else doSell(sym, sh, price);
+    if(side==="BUY") buyByAmount(sym, amount, price);
+    else sellByAmount(sym, amount, price);
 
     closeTicket();
     renderAll();
   }
 
-  function doBuy(sym, sh, price){
-    const cost = price*sh;
+  function buyByAmount(sym, amount, price){
     const cash = getCash();
-    if(cost > cash + 1e-9) return toast(`Not enough cash. Need ${gbp(cost)}, you have ${gbp(cash)}.`);
+    if(amount > cash + 1e-9) return toast(`Not enough cash. You have ${gbp(cash)}.`);
+
+    const shares = amount / price;
 
     const positions = getPositions();
     const pos = positions[sym];
     if(!pos){
-      positions[sym] = { shares: sh, avg: price };
+      positions[sym] = { shares: shares, avg: price };
     } else {
-      const newShares = pos.shares + sh;
-      const newAvg = ((pos.shares*pos.avg) + (sh*price)) / newShares;
+      const newShares = pos.shares + shares;
+      const newAvg = ((pos.shares*pos.avg) + (shares*price)) / newShares;
       positions[sym] = { shares:newShares, avg:newAvg };
     }
-    setCash(cash - cost);
+    setCash(cash - amount);
     setPositions(positions);
 
     const hist = getHistory();
-    hist.push({ ts: Date.now(), side:"BUY", symbol:sym, shares:sh, price_gbp:price, notional_gbp:cost });
+    hist.push({ ts: Date.now(), side:"BUY", symbol:sym, amount_gbp:amount, shares:shares, price_gbp:price });
     setHistory(hist);
 
     const w = getWatchlist();
-    if(!w.includes(sym)){ w.push(sym); setWatchlist(w); }
-    toast(`✅ Bought ${sh} ${sym} @ ${gbp(price)} (cost ${gbp(cost)})`);
+    if(!w.includes(sym)) { w.push(sym); setWatchlist(w); }
+
+    toast(`✅ Bought ~${shares.toFixed(6)} ${sym} for ${gbp(amount)}`);
   }
 
-  function doSell(sym, sh, price){
+  function sellByAmount(sym, amount, price){
     const positions = getPositions();
     const pos = positions[sym];
     if(!pos) return toast(`You have no position in ${sym}.`);
-    if(sh > pos.shares + 1e-9) return toast(`Not enough shares. You have ${pos.shares}.`);
 
-    const proceeds = price*sh;
-    setCash(getCash() + proceeds); // ✅ add money back
+    const maxProceeds = pos.shares * price;
+    const proceeds = Math.min(amount, maxProceeds);
+    const sharesToSell = proceeds / price;
 
-    const remaining = pos.shares - sh;
+    setCash(getCash() + proceeds);
+
+    const remaining = pos.shares - sharesToSell;
     if(remaining <= 1e-9) delete positions[sym];
     else positions[sym] = { shares: remaining, avg: pos.avg };
     setPositions(positions);
 
     const hist = getHistory();
-    hist.push({ ts: Date.now(), side:"SELL", symbol:sym, shares:sh, price_gbp:price, notional_gbp:proceeds });
+    hist.push({ ts: Date.now(), side:"SELL", symbol:sym, amount_gbp:proceeds, shares:sharesToSell, price_gbp:price });
     setHistory(hist);
 
-    toast(`✅ Sold ${sh} ${sym} @ ${gbp(price)} (added ${gbp(proceeds)} to cash)`);
+    toast(amount > maxProceeds + 1e-9 ? `✅ Sold max possible: ${gbp(proceeds)} (all shares)` : `✅ Sold ~${sharesToSell.toFixed(6)} ${sym} for ${gbp(proceeds)}`);
   }
 
-  // ---- Discover (reference tickers search) ----
+  // Discover
   let discCursor = null;
   let discPage = 1;
   let discLastQuery = null;
-
-  function discStateSave(){
-    localStorage.setItem(KEY.discState, JSON.stringify({
-      cursor: discCursor, page: discPage, lastQuery: discLastQuery
-    }));
-  }
+  function discStateSave(){ localStorage.setItem(KEY.discState, JSON.stringify({cursor:discCursor,page:discPage,lastQuery:discLastQuery})); }
   function discStateLoad(){
     const raw = localStorage.getItem(KEY.discState);
     if(!raw) return;
@@ -980,6 +989,10 @@
       discLastQuery = s.lastQuery || null;
       document.getElementById("discPage").textContent = `Page ${discPage}`;
     }catch{}
+  }
+
+  function jsEsc(s){
+    return String(s).replaceAll("\\","\\\\").replaceAll("'","\\'").replaceAll('"','\\"');
   }
 
   async function discoverSearch(reset=true){
@@ -994,17 +1007,9 @@
       discCursor = null;
       discPage = 1;
     }
-
     discLastQuery = {q, asset, locale};
 
-    // Massive/Polygon reference tickers endpoint:
-    // GET /v3/reference/tickers?search=...&market=stocks&active=true&limit=50&cursor=...
-    // For crypto/forex, market differs; we keep it simple with asset mapping.
-    // NOTE: Availability depends on plan and may not include all UK instruments.
-    let market = "stocks";
-    if(asset === "crypto") market = "crypto";
-    if(asset === "forex") market = "fx";
-
+    const market = (asset === "stocks") ? "stocks" : (asset === "crypto") ? "crypto" : "fx";
     const params = new URLSearchParams();
     if(q) params.set("search", q);
     params.set("active", "true");
@@ -1015,9 +1020,8 @@
     params.set("apiKey", apiKey);
 
     const url = `https://api.polygon.io/v3/reference/tickers?${params.toString()}`;
-
     const box = document.getElementById("discResults");
-    box.innerHTML = `<div class="item"><div class="meta"><b>Loading…</b><span class="muted">Fetching symbols…</span></div></div>`;
+    box.innerHTML = `<div style="padding:12px" class="muted">Loading…</div>`;
 
     try{
       const r = await fetch(url, {cache:"no-store"});
@@ -1030,34 +1034,33 @@
 
       const results = j?.results || [];
       if(results.length === 0){
-        box.innerHTML = `<div class="item"><div class="meta"><b>No results</b><span class="muted">Try a different search or asset class.</span></div></div>`;
+        box.innerHTML = `<div style="padding:12px" class="muted">No results — try another search.</div>`;
         return;
       }
 
-      box.innerHTML = "";
+      let html = "";
       for(const it of results){
         const sym = (it.ticker || "").toUpperCase();
-        const name = it.name || "—";
+        const fullName = it.name || sym;
         const ex = it.primary_exchange || it.market || market;
-        const ccy = it.currency_name || it.currency_symbol || it.currency || "";
-        const row = document.createElement("div");
-        row.className = "item";
-        row.innerHTML = `
-          <div class="meta">
-            <b>${sym}</b>
-            <span class="muted">${name}</span>
-            <span class="small muted">${ex}${ccy ? " • "+ccy : ""}</span>
-          </div>
-          <div class="row">
-            <button class="btn ghost" onclick="addSymbol('${sym.replace(/'/g,"\\'")}')">Add</button>
-            <button class="btn" onclick="setActiveSymbol('${sym.replace(/'/g,"\\'")}')">Open</button>
+        html += `
+          <div style="padding:12px; border-bottom:1px solid var(--line); display:flex; gap:10px; justify-content:space-between; align-items:center;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <b>${sym}</b>
+              <span class="muted" style="font-size:12px;">${escapeHtml(fullName)}</span>
+              <span class="small muted">${escapeHtml(ex)}</span>
+            </div>
+            <div class="row">
+              <button class="btn ghost" onclick="addSymbolFromDiscover('${jsEsc(sym)}','${jsEsc(fullName)}')">Add</button>
+              <button class="btn" onclick="openSymbolFromDiscover('${jsEsc(sym)}','${jsEsc(fullName)}')">Open</button>
+            </div>
           </div>
         `;
-        box.appendChild(row);
       }
+      box.innerHTML = html;
     } catch(e){
       console.error(e);
-      box.innerHTML = `<div class="item"><div class="meta"><b>Discover failed</b><span class="muted">Your plan may not allow reference searches for this market/locale.</span></div></div>`;
+      box.innerHTML = `<div style="padding:12px" class="muted">Discover failed. Your plan may not allow reference searches for this market/locale.</div>`;
     }
   }
 
@@ -1067,22 +1070,26 @@
     discoverSearch(false);
   }
   function discoverPrev(){
-    // Reference API uses cursor, so "prev" isn't reliably available without storing cursors.
-    // We'll just reset and tell user to refine search.
     discPage = 1;
     discCursor = null;
     discoverSearch(true);
   }
 
-  function addSymbol(sym){
+  function addSymbolFromDiscover(sym, fullName){
     sym = (sym||"").trim().toUpperCase();
-    if(!sym) return;
+    rememberName(sym, fullName);
     const w = getWatchlist();
     if(!w.includes(sym)) w.push(sym);
     setWatchlist(w);
-    toast(`Added ${sym} to watchlist.`);
+    toast(`Added ${sym}`);
     renderWatch();
     refreshPrices();
+  }
+  function openSymbolFromDiscover(sym, fullName){
+    sym = (sym||"").trim().toUpperCase();
+    rememberName(sym, fullName);
+    setActiveSymbol(sym);
+    showView("watch");
   }
 
   // init
@@ -1096,9 +1103,22 @@
 
   loadApiKey();
   getCash();
+  getWatchlist();
   if(!localStorage.getItem(KEY.active)) localStorage.setItem(KEY.active, "AAPL");
   discStateLoad();
+
+  // Auto-refresh once on load if key exists
+  const k = localStorage.getItem(KEY.api);
+  if(k && k.trim().length > 0){
+    setTimeout(()=>refreshPrices(), 400);
+  }
+
   renderAll();
+
+  // Keep ticket synced
+  document.getElementById("ticketSide").addEventListener("change", syncTicket);
+  document.getElementById("ticketSymbol").addEventListener("input", syncTicket);
+  document.getElementById("ticketAmount").addEventListener("input", syncTicket);
 </script>
 </body>
 </html>
